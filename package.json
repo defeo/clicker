@@ -1,0 +1,24 @@
+{
+  "name": "clicker",
+  "version": "0.1.0",
+  "description": "A backend app for clickers, polls and quizzes",
+  "main": "server.js",
+  "scripts": {
+    "db": "mkdir -p mongodb && mongod -f mongodb.conf",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node --harmony-default-parameters server.js"
+  },
+  "author": "the eLeMentS team",
+  "license": "MIT",
+  "dependencies": {
+    "bluebird": "^3.1.1",
+    "lodash": "^4.0.0",
+    "mongoose": "^4.3.5",
+    "passport": "^0.3.2",
+    "passport-anonymous": "^1.0.1",
+    "passport-http": "^0.3.0",
+    "passport-http-bearer": "^1.0.1",
+    "passport-saml": "^0.15.0",
+    "restify": "^4.0.3",
+  }
+}

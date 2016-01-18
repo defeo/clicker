@@ -1,0 +1,12 @@
+{
+    "port" : 8080,
+    "mongo_url" : "mongodb://localhost/clicker",
+    "cipher" : "aes-256-cbc-hmac-sha256",
+    "secret" : "Pulcinella's",
+    "tokenExpiry" : 15552000000,
+    "saml": {
+	"entryPoint": "https://cas-dev.uvsq.fr/login",
+	"callbackUrl": "http://proust.prism.uvsq.fr/login/saml",
+	"clientUrl": "http://defeo.lu/aws/"
+    }
+}
