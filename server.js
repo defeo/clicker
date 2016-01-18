@@ -9,10 +9,23 @@ mongoose.connection.on('error', () => {
 
 const restify = require('restify');
 const server = restify.createServer();
-server.use(restify.CORS());
 server.use(restify.queryParser({ mapParams: false }));
 server.use(restify.bodyParser({ mapParams: false }));
 
+/** CORS **/
+server.opts('.*', (req, res, next) => {
+    if (req.headers.origin && req.headers['access-control-request-method']) {
+        res.header('Access-Control-Allow-Origin', req.headers.origin);
+        res.header('Access-Control-Allow-Headers', 'Authorization');
+        res.header('Allow', req.headers['access-control-request-method']);
+        res.header('Access-Control-Allow-Methods', req.headers['access-control-request-method']);
+        res.send(204);
+        return next();
+    } else {
+        next(new restify.MethodNotAllowedError);
+    }
+});
+server.use(restify.CORS( { headers: ['authorization'] }));
 
 /** Authentication **/
 
