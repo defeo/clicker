@@ -20,7 +20,7 @@ server.opts('.*', (req, res, next) => {
         res.header('Allow', req.headers['access-control-request-method']);
         res.header('Access-Control-Allow-Methods', req.headers['access-control-request-method']);
         res.send(204);
-        return next();
+        return next(false);
     } else {
         next(new restify.MethodNotAllowedError);
     }
@@ -37,23 +37,11 @@ server.post({ path: '/login/saml', version: '1.0.0' }, auth.samlCallback,
 	    (req, res, next) => {
 		if (req.user) {
 		    const token = auth.createToken(req.user._id, Date.now() + 20*1000);
-		    return res.redirect(`${config.saml.clientUrl}?token=${token}`, next);
+		    return res.redirect(`${config.saml.clientUrl}?token=${token.token}`, next);
 		} else {
 		    return next(new restify.UnauthorizedError("Unexpected SAML error"));
 		}
 	    });
-
-server.get({ path: '/token', version: '1.0.0' }, (req, res, next) => {
-    if (req.user) {
-	res.send({
-	    token: auth.createToken(req.user._id),
-	    uid: req.user._id,
-	    expiresIn: config.tokenExpiry,
-	});
-    } else {
-	return next(new restify.UnauthorizedError("Authenticate first"));	
-    }
-});
 
 function authorize(level) {
     return (req, res, next) => 
@@ -61,6 +49,22 @@ function authorize(level) {
 	? next(new restify.ForbiddenError()) 
 	: next();
 }
+
+server.get({ path: '/token', version: '1.0.0' },
+	   authorize(auth.level.USER),
+	   (req, res, next) => {
+	       if (req.user) {
+		   const token = auth.createToken(req.user._id);
+		   res.send({
+		       uid: token.data,
+		       expires: token.expires,
+		       token: token.token,
+		   });
+		   return next();
+	       } else {
+		   return next(new restify.UnauthorizedError("Authenticate first"));	
+	       }
+	   });
 
 /** Polls **/
 

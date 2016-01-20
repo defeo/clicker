@@ -1,7 +1,7 @@
 {
     "port" : 8080,
     "mongo_url" : "mongodb://localhost/clicker",
-    "cipher" : "aes-256-cbc-hmac-sha256",
+    "hashFunction" : "sha256",
     "secret" : "Pulcinella's",
     "tokenExpiry" : 15552000000,
     "saml": {
