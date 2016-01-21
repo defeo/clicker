@@ -1,0 +1,42 @@
+#!/usr/bin/node --harmony-default-parameters
+
+const config = require('../config');
+const models = require('../lib/models');
+const Promise = require('bluebird');
+const mongoose = require('mongoose');
+mongoose.connect(config.mongo_url);
+mongoose.connection.on('error', () => {
+    throw new Error('Unable to connect to ' + config.mongo_url);
+});
+const yaml = require('yamljs');
+
+const program = require('commander');
+
+program
+    .command('import')
+    .description('Import poll')
+    .arguments('<polls...>')
+    .action((polls) => {
+	if (polls.some((x) => !x.endsWith('.yml') && !x.endsWith('.yaml') && !x.endsWith('.json'))) {
+	    console.error('Can only read .yml and .json files');
+	    process.exit(1);
+	}
+	Promise.map(polls,
+		    (p) => {
+			var poll = p.endsWith('.yml') || p.endsWith('yaml')
+			    ? yaml.load(p)
+			    : p.endsWith('.json')
+			    ? require(p)
+			    : null;
+			poll = new models.Poll(poll);
+			return poll.save();
+		    })
+	    .then((polls) => console.log(polls.map((x) => x._id)))
+	    .catch((err) => {
+		console.error(err.message);
+		process.exit(1);
+	    })
+	    .done(() => mongoose.connection.close());
+    });
+
+program.parse(process.argv);
