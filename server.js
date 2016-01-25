@@ -16,7 +16,7 @@ server.use(restify.bodyParser({ mapParams: false }));
 server.opts('.*', (req, res, next) => {
     if (req.headers.origin && req.headers['access-control-request-method']) {
         res.header('Access-Control-Allow-Origin', req.headers.origin);
-        res.header('Access-Control-Allow-Headers', 'Authorization');
+        res.header('Access-Control-Allow-Headers', 'authorization, content-type');
         res.header('Allow', req.headers['access-control-request-method']);
         res.header('Access-Control-Allow-Methods', req.headers['access-control-request-method']);
         res.send(204);
@@ -128,6 +128,7 @@ function getAnswers(poll, req, next) {
 		    .match({ user: req.user._id })
 		    .unwind('answers')
 		    .match({ 'answers.poll': poll._id })
+		    .sort('answers.date')
 		    .group({ _id: '$_id' ,
 			     answers: { $push: '$answers' }
 			   })
@@ -151,7 +152,12 @@ server.get({ path: '/answer/:pollid', version: '1.0.0' },
 			    });
 		   return next();
 	       } else {
-		   return next(new restify.UnauthorizedError('Answer first'));
+		   const pollObj = poll.toObject();
+		   pollObj.choices.forEach((choice) => delete choice.correct);
+		   return next(new restify.ForbiddenError({ body : {
+		       message: 'Answer first',
+		       poll: pollObj,
+		   } }));
 	       }
 	   })
 	   .catch((err) => next(err))
@@ -164,13 +170,12 @@ server.post({ path: '/answer/:pollid', version: '1.0.0' },
 	    .spread((poll, user) => {
 		const grade = poll.grade(req.body);
 		const answer = { poll: poll, choices: req.body };
-		return [poll, grade, user
-			? user.update({ $push: { answers: answer } })
-			: models.PollAnswers.findOneAndUpdate(
-			    { user: req.user._id }, { answers: [answer] },
-			    { new: true, upsert: true })]
+		return [poll, grade, models.PollAnswers.findOneAndUpdate(
+		    { user: req.user._id },
+		    { $push : { answers: answer } },
+		    { new: true, upsert: true })]
 	    })
-	    .spread((result, grade, poll) => {
+	    .spread((poll, grade, result) => {
 		res.send({ result: result, poll: poll, grade: grade });
 		return next();
 	    })
