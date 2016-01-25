@@ -3,6 +3,7 @@
 const config = require('../config');
 const models = require('../lib/models');
 const Promise = require('bluebird');
+const request = require('request-promise');
 const mongoose = require('mongoose');
 mongoose.connect(config.mongo_url);
 mongoose.connection.on('error', () => {
@@ -11,6 +12,18 @@ mongoose.connection.on('error', () => {
 const yaml = require('yamljs');
 
 const program = require('commander');
+
+function pollMap(polls, cb) {
+    if (polls.some((x) => !x.endsWith('.yml') && !x.endsWith('.yaml') && !x.endsWith('.json'))) {
+	console.error('Can only read .yml and .json files');
+	process.exit(1);
+    }
+    return Promise.map(polls, (p) => cb(p.endsWith('.yml') || p.endsWith('yaml')
+					? yaml.load(p)
+					: p.endsWith('.json')
+					? require(p)
+					: null));
+}
 
 program
     .command('import')
@@ -21,16 +34,35 @@ program
 	    console.error('Can only read .yml and .json files');
 	    process.exit(1);
 	}
-	Promise.map(polls,
-		    (p) => {
-			var poll = p.endsWith('.yml') || p.endsWith('yaml')
-			    ? yaml.load(p)
-			    : p.endsWith('.json')
-			    ? require(p)
-			    : null;
-			poll = new models.Poll(poll);
-			return poll.save();
-		    })
+	pollMap(polls, (p) => (new models.Poll(p)).save())
+	    .then((polls) => console.log(polls.map((x) => x._id)))
+	    .catch((err) => {
+		console.error(err.message);
+		process.exit(1);
+	    })
+	    .done(() => mongoose.connection.close());
+    });
+
+program
+    .command('upload')
+    .description('Import poll')
+    .option('-s, --server <server>', 'Server')
+    .option('-t, --token <token>', 'Server')
+    .arguments('<polls...>')
+    .action((polls, opts) => {
+	var server = opts.server || config.remoteServer || 'http://localhost:8080';
+	var token = opts.token || config.authToken;
+	if (!token) {
+	    console.error('Cannot authenticate');
+	    process.exit(1);
+	}
+	pollMap(polls, (p) => request({
+	    method: 'PUT',
+	    uri: server + '/polls',
+	    headers: { Authorization: 'bearer ' + token },
+	    body: p,
+	    json: true,
+	}))
 	    .then((polls) => console.log(polls.map((x) => x._id)))
 	    .catch((err) => {
 		console.error(err.message);
