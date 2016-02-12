@@ -7,6 +7,8 @@ mongoose.connection.on('error', () => {
     throw new Error('Unable to connect to ' + config.mongo_url);
 });
 
+const Promise = require('bluebird');
+
 const restify = require('restify');
 const server = restify.createServer();
 server.use(restify.queryParser({ mapParams: false }));
@@ -189,8 +191,44 @@ server.post({ path: '/answer/:pollid', version: '1.0.0' },
 server.get({ path: '/stats/poll/:pollid', version: '1.0.0' }, (req, res, next) => {
 });
 
-server.get({ path: '/stats/user/:user', version: '1.0.0' }, (req, res, next) => {
-});
+function getUserAnswers(user) {
+    return models.PollAnswers.aggregate()
+	.match({ user: user })
+	.unwind('answers')
+	.sort('answers.date')
+	.group({ _id: '$answers.poll', answers: { $push: '$answers' } })
+	.exec()
+	.then((polls) => Promise.all(
+	    polls.map((p) => models.Poll.findById(p._id)
+		      .then((poll) => null
+			    ? null
+			    : ({
+				poll: poll,
+				answers: p.answers.map((a) => ({
+				    answer: a,
+				    grade: poll.grade(a.choices)
+				}))
+			    })))
+	));
+}
+
+server.get({ path: '/stats/user/:user', version: '1.0.0' }, 
+	   authorize(auth.level.PRIVILEDGED),
+	   (req, res, next) => getUserAnswers(req.params.user)
+	   .then((answers) => {
+	       res.send(answers);
+	       next();
+	   })
+	   .catch((err) => next(err)));
+
+server.get({ path: '/stats/me', version: '1.0.0' }, 
+	   authorize(auth.level.USER),
+	   (req, res, next) => getUserAnswers(req.user._id)
+	   .then((answers) => {
+	       res.send(answers);
+	       next();
+	   })
+	   .catch((err) => next(err)));
 
 
 /****/
