@@ -188,8 +188,36 @@ server.post({ path: '/answer/:pollid', version: '1.0.0' },
 
 /** Stats **/
 
-server.get({ path: '/stats/poll/:pollid', version: '1.0.0' }, (req, res, next) => {
-});
+server.get({ path: '/stats/poll/:pollid', version: '1.0.0' },
+	   authorize(auth.level.PRIVILEDGED),
+	   (req, res, next) => models.Poll.findById(req.params.pollid)
+	   .exec()
+	   .then((poll) => (poll === null)
+		 ? next(new restify.NotFoundError())
+		 : [poll, models.PollAnswers.aggregate()
+		    .match({ 'answers.poll' : poll._id })
+		    .project({
+			user: '$user',
+			answers: { $filter: {
+			    input: '$answers',
+			    as: 'answ',
+			    cond: { $eq: ['$$answ.poll', poll._id] }
+			} },
+		    })
+		    .exec()
+		   ])
+	   .spread((poll, users) => {
+	       res.send(users.map((u) => ({
+		   user: u.user,
+		   answers: u.answers.map((a) => ({
+		       date: a.date,
+		       choices: a.choices,
+		       grade: poll.grade(a.choices),
+		   }))
+	       })));
+	       next();
+	   })
+	   .catch((err) => next(err)));
 
 function getUserAnswers(user) {
     return models.PollAnswers.aggregate()
@@ -200,15 +228,15 @@ function getUserAnswers(user) {
 	.exec()
 	.then((polls) => Promise.all(
 	    polls.map((p) => models.Poll.findById(p._id)
-		      .then((poll) => null
-			    ? null
-			    : ({
+		      .then((poll) => poll
+			    ? ({
 				poll: poll,
 				answers: p.answers.map((a) => ({
 				    answer: a,
 				    grade: poll.grade(a.choices)
 				}))
-			    })))
+			    })
+			    : null))
 	));
 }
 
@@ -226,6 +254,17 @@ server.get({ path: '/stats/me', version: '1.0.0' },
 	   (req, res, next) => getUserAnswers(req.user._id)
 	   .then((answers) => {
 	       res.send(answers);
+	       next();
+	   })
+	   .catch((err) => next(err)));
+
+/** Users **/
+server.get({ path: '/users', version: '1.0.0' }, 
+	   authorize(auth.level.PRIVILEDGED),
+	   (req, res, next) => models.User.find()
+	   .lean().exec()
+	   .then((list) => {
+	       res.send(list);
 	       next();
 	   })
 	   .catch((err) => next(err)));
