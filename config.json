@@ -4,6 +4,11 @@
     "hashFunction" : "sha256",
     "secret" : "Pulcinella's",
     "tokenExpiry" : 15552000000,
+    "userCanSubscribe": {
+	"basic": true,
+	"saml": true,
+	"github": true
+    },
     "saml": {
 	"entryPoint": "https://cas-dev.uvsq.fr/login",
 	"callbackUrl": "http://proust.prism.uvsq.fr/login/saml",

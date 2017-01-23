@@ -1,26 +1,33 @@
 {
   "name": "clicker",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "A backend app for clickers, polls and quizzes",
   "main": "server.js",
   "scripts": {
-    "db": "mkdir -p mongodb && mongod -f mongodb.conf",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node --harmony-default-parameters server.js"
+    "pretest": "mkdir -p mongodb && nohup mongod -f mongodb.conf &",
+    "test": "mocha test",
+    "posttest": "mongod -f mongodb.conf --shutdown",
+    "prestart": "mkdir -p mongodb && nohup mongod -f mongodb.conf &",
+    "start": "node server.js",
+    "poststop": "mongod -f mongodb.conf --shutdown"
   },
   "author": "the eLeMentS team",
   "license": "MIT",
   "dependencies": {
-    "bluebird": "^3.1.1",
     "commander": "^2.9.0",
-    "lodash": "^4.0.0",
-    "mongoose": "^4.3.5",
+    "lodash": "^4.17.4",
+    "mongoose": "^4.7.7",
     "passport": "^0.3.2",
     "passport-anonymous": "^1.0.1",
     "passport-http": "^0.3.0",
     "passport-http-bearer": "^1.0.1",
     "passport-saml": "^0.15.0",
-    "restify": "^4.0.3",
-    "yamljs": "^0.2.4"
+    "restify": "^4.3.0",
+    "yamljs": "^0.2.8"
+  },
+  "devDependencies": {
+    "hippie": "^0.5.1",
+    "mocha": "^3.2.0",
+    "sinon": "^1.17.7"
   }
 }

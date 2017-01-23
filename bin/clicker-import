@@ -1,4 +1,4 @@
-#!/usr/bin/node --harmony-default-parameters
+#!/usr/bin/node
 
 const config = require('../config');
 const models = require('../lib/models');
