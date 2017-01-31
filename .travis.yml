@@ -3,8 +3,13 @@ node_js:
   - "7"
   - "6"
   - "node"
-  - "iojs"
 services:
   - mongodb
 script:
   - mocha test
+addons:
+  apt:
+    sources:
+      - mongodb-3.0-precise
+    packages:
+      - mongodb-org-server
