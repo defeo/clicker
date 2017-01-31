@@ -63,9 +63,8 @@ describe('Models', function() {
 	    ],
 	    auths: { read: { level: level.USER } },
 	});
+	assert.equal(poll.clean(), null);
 	assert.equal(poll.clean(level.ANONYMOUS), null);
-	for (var c of poll.clean().choices)
-	    assert.deepEqual(Object.keys(c).sort(), ['_id', 'answer']);
 	for (var c of poll.clean(this.user.level).choices)
 	    assert.deepEqual(Object.keys(c).sort(), ['_id', 'answer']);
 	assert.deepEqual(poll.clean(this.admin.level).choices,

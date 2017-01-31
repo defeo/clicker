@@ -7,9 +7,8 @@
     "pretest": "mkdir -p mongodb && nohup mongod -f mongodb.conf &",
     "test": "mocha test",
     "posttest": "mongod -f mongodb.conf --shutdown",
-    "prestart": "mkdir -p mongodb && nohup mongod -f mongodb.conf &",
     "start": "node server.js",
-    "poststop": "mongod -f mongodb.conf --shutdown"
+    "local-db": "mkdir -p mongodb && mongod -f mongodb.conf"
   },
   "author": "the eLeMentS team",
   "license": "MIT",
@@ -19,9 +18,9 @@
     "mongoose": "^4.7.7",
     "passport": "^0.3.2",
     "passport-anonymous": "^1.0.1",
+    "passport-github2": "^0.1.10",
     "passport-http": "^0.3.0",
     "passport-http-bearer": "^1.0.1",
-    "passport-saml": "^0.15.0",
     "restify": "^4.3.0",
     "yamljs": "^0.2.8"
   },

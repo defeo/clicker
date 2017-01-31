@@ -1,3 +1,4 @@
+const config = require('../config');
 const mongoose = require('mongoose');
 const models = require('../lib/models');
 const auth = require('../lib/auth');
@@ -22,7 +23,7 @@ const userTok = auth.createToken('user').token;
 
 describe('Server', function() {
     before(function(done) {
-	mongoose.connect('mongodb://localhost/testdb');
+	mongoose.connect(config.mongo.test.url + '-testdb', config.mongo.test.options);
 	models.User.create([
 	    { _id: 'admin', level: auth.level.ADMIN },
 	    { _id: 'user' }
@@ -145,6 +146,18 @@ describe('Server', function() {
 	    .expectValue('result.answers[0].choices', [ this.poll.choices[0]._id ])
 	    .expectValue('poll.title', 'T1')
 	    .expectValue('grade', null)
+	    .end(done);
+    });
+
+    it('answer poll and read answer', function(done) {
+	api(adminTok)
+	    .post(`/answer/${this.poll._id}`)
+	    .send([ this.poll.choices[0]._id ])
+	    .expectStatus(200)
+	    .expectValue('result.answers[0].choices', [ this.poll.choices[0]._id ])
+	    .expectValue('poll.title', 'T1')
+	    .expectValue('poll.choices[2].correct', true)
+	    .expectValue('grade', { ok: false })
 	    .end(done);
     });
 

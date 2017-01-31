@@ -2,12 +2,12 @@
 
 const config = require('../config');
 const models = require('../lib/models');
-const Promise = require('bluebird');
 const request = require('request-promise');
 const mongoose = require('mongoose');
-mongoose.connect(config.mongo_url);
+const mongo = (process.env.DEBUG || config.debug) ? config.mongo.test : config.mongo.production
+mongoose.connect(mongo.url, mongo.options);
 mongoose.connection.on('error', () => {
-    throw new Error('Unable to connect to ' + config.mongo_url);
+    throw new Error('Unable to connect to ' + mongo_url);
 });
 const yaml = require('yamljs');
 
@@ -18,11 +18,11 @@ function pollMap(polls, cb) {
 	console.error('Can only read .yml and .json files');
 	process.exit(1);
     }
-    return Promise.map(polls, (p) => cb(p.endsWith('.yml') || p.endsWith('yaml')
-					? yaml.load(p)
-					: p.endsWith('.json')
-					? require(p)
-					: null));
+    return Promise.all(polls.map((p) => cb(p.endsWith('.yml') || p.endsWith('.yaml')
+					   ? yaml.load(p)
+					   : p.endsWith('.json')
+					   ? require(p)
+					   : null)));
 }
 
 program
@@ -30,17 +30,13 @@ program
     .description('Import poll')
     .arguments('<polls...>')
     .action((polls) => {
-	if (polls.some((x) => !x.endsWith('.yml') && !x.endsWith('.yaml') && !x.endsWith('.json'))) {
-	    console.error('Can only read .yml and .json files');
-	    process.exit(1);
-	}
 	pollMap(polls, (p) => (new models.Poll(p)).save())
 	    .then((polls) => console.log(polls.map((x) => x._id)))
 	    .catch((err) => {
 		console.error(err.message);
 		process.exit(1);
 	    })
-	    .done(() => mongoose.connection.close());
+	    .then(() => mongoose.connection.close());
     });
 
 program
@@ -68,7 +64,7 @@ program
 		console.error(err.message);
 		process.exit(1);
 	    })
-	    .done(() => mongoose.connection.close());
+	    .then(() => mongoose.connection.close());
     });
 
 program.parse(process.argv);

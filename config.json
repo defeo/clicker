@@ -1,17 +1,29 @@
 {
     "port" : 8080,
-    "mongo_url" : "mongodb://localhost/clicker",
+    "mongo" : {
+	"test": {
+	    "url": "mongodb://localhost/clicker"
+	},
+	"production": {
+	    "url": "mongodb://user:password@example.com/clicker",
+	    "options": {
+		"server": { "socketOptions": { "keepAlive": 30000, "connectTimeoutMS": 30000 } }
+	    }
+	}
+    },
     "hashFunction" : "sha256",
     "secret" : "Pulcinella's",
     "tokenExpiry" : 15552000000,
     "userCanSubscribe": {
 	"basic": true,
-	"saml": true,
 	"github": true
     },
-    "saml": {
-	"entryPoint": "https://cas-dev.uvsq.fr/login",
-	"callbackUrl": "http://proust.prism.uvsq.fr/login/saml",
-	"clientUrl": "http://defeo.lu/aws/"
-    }
+    "github": {
+	"clientID": "<CLIENT-ID>",
+	"clientSecret": "<CLIENT-SECRET>",
+	"callbackURL": "https://clicker.example.com/login/github"
+    },
+    "clientURL": "http://defeo.lu/aws",
+    "remoteServer": "https://clicker.example.com/",
+    "authToken": "<AUTH-TOKEN>"
 }
