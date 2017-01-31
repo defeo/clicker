@@ -23,7 +23,7 @@ const userTok = auth.createToken('user').token;
 
 describe('Server', function() {
     before(function(done) {
-	mongoose.connect(config.mongo.test.url + '-testdb', config.mongo.test.options);
+	mongoose.connect(config.mongo.url + '-testdb', config.mongo.options);
 	models.User.create([
 	    { _id: 'admin', level: auth.level.ADMIN },
 	    { _id: 'user' }

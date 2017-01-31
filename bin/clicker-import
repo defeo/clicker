@@ -4,10 +4,9 @@ const config = require('../config');
 const models = require('../lib/models');
 const request = require('request-promise');
 const mongoose = require('mongoose');
-const mongo = (process.env.DEBUG || config.debug) ? config.mongo.test : config.mongo.production
-mongoose.connect(mongo.url, mongo.options);
+mongoose.connect(config.mongo.url, config.mongo.options);
 mongoose.connection.on('error', () => {
-    throw new Error('Unable to connect to ' + mongo_url);
+    throw new Error('Unable to connect to ' + config.mongo.url);
 });
 const yaml = require('yamljs');
 
