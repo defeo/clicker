@@ -26,7 +26,7 @@ describe('Server', function() {
 	mongoose.connect(config.mongo.url + '-testdb', config.mongo.options);
 	models.User.create([
 	    { _id: 'admin', level: auth.level.ADMIN },
-	    { _id: 'user' }
+	    { _id: 'user', profile: { name: 'Pinco Pallino', data: { x: 1 } } }
 	])
 	    .then(() => done())
 	    .catch(done);
@@ -199,6 +199,43 @@ describe('Server', function() {
 	    .expectValue('[0].poll.title', 'T1')
 	    .expectValue('[0].answers[0].answer.choices', [ this.poll.choices[0]._id ])
 	    .expectValue('[0].answers[0].grade', null)
+	    .end(done);
+    });
+
+    it('get anon profile', function(done) {
+	api()
+	    .get(`/profile`)
+	    .expectStatus(200)
+	    .expectKey('_id')
+	    .expectKey('lastSeen')
+	    .expectKey('created')
+	    .end(done);
+    });
+
+    it('modify anon profile', function(done) {
+	api()
+	    .post(`/profile`)
+	    .send({ name: 'toto' })
+	    .expectStatus(403)
+	    .end(done);
+    });
+
+    it('get user profile', function(done) {
+	api(userTok)
+	    .get(`/profile`)
+	    .expectStatus(200)
+	    .expectValue('name', 'Pinco Pallino')
+	    .expectValue('data', { x: 1 })
+	    .end(done);
+    });
+
+    it('modify anon profile', function(done) {
+	api(userTok)
+	    .post(`/profile`)
+	    .send({ name: 'toto' })
+	    .expectStatus(200)
+	    .expectValue('name', 'toto')
+	    .expectValue('data', { x: 1 })
 	    .end(done);
     });
 
