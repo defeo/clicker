@@ -39,10 +39,43 @@ program
     });
 
 program
+    .command('export')
+    .description('Export polls')
+    .action(() => {
+	models.Poll.find({}, '-_id -__v -choices._id -auths.stat._id -auths.read._id -auths.readAnswer._id -auths.answer._id')
+	    .lean()
+	    .then((polls) => polls.forEach(
+		(p) =>
+		    console.log(yaml.stringify(p, 4), '\n')))
+	    .catch((err) => {
+		console.error(err.message);
+		process.exit(1);
+	    })
+	    .then(() => mongoose.connection.close());
+    });
+
+program
+    .command('update')
+    .description('Update poll')
+    .option('-t, --title', 'Search by title instead of _id')
+    .arguments('<polls...>')
+    .action((polls, opts) => {
+	pollMap(polls, (p) => models.Poll
+		.findOneAndUpdate(opts.title ? { title: p.title } : { _id: p._id }, p)
+		.exec())
+	    .then((polls) => console.log(polls.map((x) => x._id)))
+	    .catch((err) => {
+		console.error(err.message);
+		process.exit(1);
+	    })
+	    .then(() => mongoose.connection.close());
+    });
+
+program
     .command('upload')
     .description('Import poll')
     .option('-s, --server <server>', 'Server')
-    .option('-t, --token <token>', 'Server')
+    .option('-t, --token <token>', 'Token')
     .arguments('<polls...>')
     .action((polls, opts) => {
 	var server = opts.server || config.remoteServer || 'http://localhost:8080';
