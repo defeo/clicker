@@ -5,7 +5,9 @@ module.exports = {
     mongo: {
 	url: process.env.MONGO_URL || 'mongodb://localhost/clicker',
 	options: {
-	    server: { socketOptions: { keepAlive: 30000, connectTimeoutMS: 30000 } }
+	    useMongoClient: true,
+	    keepAlive: 30000,
+	    connectTimeoutMS: 30000
 	}
     },
     hashFunction: "sha256",
