@@ -42,11 +42,11 @@ program
     .command('export')
     .description('Export polls')
     .action(() => {
-	models.Poll.find({}, '-_id -__v -choices._id -auths.stat._id -auths.read._id -auths.readAnswer._id -auths.answer._id')
+	models.Poll.find({}, '-__v')
 	    .lean()
 	    .then((polls) => polls.forEach(
 		(p) =>
-		    console.log(yaml.stringify(p, 4), '\n')))
+		    console.log(yaml.stringify(JSON.parse(JSON.stringify(p)), 4), '\n')))
 	    .catch((err) => {
 		console.error(err.message);
 		process.exit(1);
