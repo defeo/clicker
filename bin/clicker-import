@@ -17,11 +17,15 @@ function pollMap(polls, cb) {
 	console.error('Can only read .yml and .json files');
 	process.exit(1);
     }
-    return Promise.all(polls.map((p) => cb(p.endsWith('.yml') || p.endsWith('.yaml')
-					   ? yaml.load(p)
-					   : p.endsWith('.json')
-					   ? require(p)
-					   : null)));
+    try {
+	return Promise.all(polls.map((p) => cb(p.endsWith('.yml') || p.endsWith('.yaml')
+					       ? yaml.load(p)
+					       : p.endsWith('.json')
+					       ? require(p)
+					       : null)));
+    } catch (err) {
+	return Promise.reject(err);
+    }
 }
 
 program
@@ -32,7 +36,7 @@ program
 	pollMap(polls, (p) => (new models.Poll(p)).save())
 	    .then((polls) => console.log(polls.map((x) => x._id)))
 	    .catch((err) => {
-		console.error(err.message);
+		console.error(err);
 		process.exit(1);
 	    })
 	    .then(() => mongoose.connection.close());
@@ -48,7 +52,7 @@ program
 		(p) =>
 		    console.log(yaml.stringify(JSON.parse(JSON.stringify(p)), 4), '\n')))
 	    .catch((err) => {
-		console.error(err.message);
+		console.error(err);
 		process.exit(1);
 	    })
 	    .then(() => mongoose.connection.close());
@@ -65,7 +69,7 @@ program
 		.exec())
 	    .then((polls) => console.log(polls.map((x) => x._id)))
 	    .catch((err) => {
-		console.error(err.message);
+		console.error(err);
 		process.exit(1);
 	    })
 	    .then(() => mongoose.connection.close());
@@ -93,7 +97,7 @@ program
 	}))
 	    .then((polls) => console.log(polls.map((x) => x._id)))
 	    .catch((err) => {
-		console.error(err.message);
+		console.error(err);
 		process.exit(1);
 	    })
 	    .then(() => mongoose.connection.close());
