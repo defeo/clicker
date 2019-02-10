@@ -1,3 +1,11 @@
+/**
+ * Example configuration for Clicker.
+ * 
+ * Edit to your needs, put it in the root folder, or mount as a Docker
+ * volume, e.g.:
+ *
+ *     docker run -d -v ./config.js:/home/node/config.js clicker
+ **/
 require('dotenv').config();
 module.exports = {
     port: process.env.PORT || 8080,
