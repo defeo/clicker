@@ -13,6 +13,7 @@ module.exports = {
     mongo: {
 	url: process.env.MONGO_URL || 'mongodb://localhost/clicker',
 	options: {
+	    autoReconnect: true,
 	    useMongoClient: true,
 	    keepAlive: 30000,
 	    connectTimeoutMS: 30000
