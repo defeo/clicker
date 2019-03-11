@@ -9,7 +9,7 @@
 require('dotenv').config();
 module.exports = {
     port: process.env.PORT || 8080,
-    debug: process.env.DEBUG || process.env.NODE_ENV !== 'production' || false,
+    debug: Boolean(process.env.DEBUG) || process.env.NODE_ENV !== 'production' || false,
     mongo: {
 	url: process.env.MONGO_URL || 'mongodb://localhost/clicker',
 	options: {
@@ -23,8 +23,8 @@ module.exports = {
     secret: process.env.SECRET || "Pulcinella's",
     tokenExpiry : process.env.TOKEN_EXPIRY || 15552000000,
     userCanSubscribe: {
-	basic: process.env.SUB_BASIC || false,
-	github: process.env.SUB_GITHUB || true,
+	basic: ['true', 'yes'].indexOf(process.env.SUB_BASIC) >= 0 || false,
+	github: !(['false', 'no'].indexOf(process.env.SUB_GITHUB) >= 0),
     },
     github: {
 	clientID: process.env.GH_CLIENT_ID || '<CLIENT_ID>',
